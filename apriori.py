@@ -72,11 +72,12 @@ def apriori_gen(cur_freq_itemsets):
 			if cnt == 1:
 				new_item_set = freq_itemset2.union(freq_itemset1)
 				flag = 0
-				if len(new_item_set) > 2:
-					for check in cur_freq_itemsets:
-						if not new_item_set.issuperset(check):
-							flag = 1
-							break
+				x = len(new_item_set)
+				for immediate_subset in combinations(new_item_set, x-1):
+					immediate_subset_set = frozenset(list(immediate_subset))
+					if immediate_subset_set not in cur_freq_itemsets:
+						flag = 1
+						break
 				if flag == 1:
 					continue
 				else:
