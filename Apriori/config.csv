@@ -1,0 +1,5 @@
+input,/home/rehas/dwdmassi1_apriori/input.csv
+output,/home/rehas/dwdmassi1_apriori/output.csv
+support,0.001
+confidence,0.2
+flag,1
