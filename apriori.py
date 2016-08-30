@@ -1,7 +1,7 @@
 from csv import reader, writer
 from math import ceil
 from itertools import combinations
-
+from time import time
 def parse_config():
 	confs = {}
 	with open('config.csv') as fconf:
@@ -16,10 +16,11 @@ def parse_config():
 
 def parse_input(inp_file):
 	records = []
+	i = 0
 	with open(inp_file) as finp:
 		content = reader(finp)
 		for record in content:
-			records.append(frozenset(record))
+			records.append(frozenset(record[:-1]))
 	return records
 
 def gen_output(freq_itemsets, association_rules, out_file):
@@ -112,9 +113,12 @@ def mine_rules(counts, freq_itemsets, minconf):
 if __name__ == "__main__":
 	confs = parse_config()
 	records = parse_input(confs['input'])
+        start = time()
 	counts, freq_itemsets = apriori(records, confs['support'])
 	if confs['flag'] == 1:
 		association_rules = mine_rules(counts, freq_itemsets, confs['confidence'])
 	else:
 		association_rules = None
 	gen_output(freq_itemsets, association_rules, confs['output'])
+        end = time()
+        print end-start
