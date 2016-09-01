@@ -27,10 +27,8 @@ def parse_input(inp_file):
 	with open("itemCodes.csv", 'wb') as fcodes:
 		out_writer = writer(fcodes)
 		for key,val in code.items():
-			out_writer.writerow([key,val]);
-
-
-
+			out_writer.writerow([key,val])
+			
 if __name__ == "__main__":
 	confs = parse_config()
 	parse_input(confs['input'])

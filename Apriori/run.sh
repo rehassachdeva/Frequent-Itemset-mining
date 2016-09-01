@@ -1,75 +1,84 @@
-declare -A dict
+infile=`awk 'BEGIN{FS=","} { confs[$1]=$2 } END { print confs["input"] }' config.csv`
+outfile=`awk 'BEGIN{FS=","} { confs[$1]=$2 } END { print confs["output"] }' config.csv`
 
-# dict+=`awk 'BEGIN{FS=","
-# cnt=0
-#                 }
-#                 { for(i=1;i<=NF;i++) {
-#                     if (itemCodes[$i]<1)
-#                         {
-#                             cnt++
-#                             itemCodes[$i]=cnt
-#                         }
-#                     }
+declare -A itemCodes
+declare -A itemCodesReverse
 
-#                 }
-#             END {
-#             print "("
-#             for (item in itemCodes) print "[\"" itemCodes[item] "\"=" "\""item "\"" "],"
-#                 print ")"
-#             }' $1`
+eval "itemCodes=($(awk 'BEGIN{FS="," 
+cnt=0}
+ 		{
+			for(i=1;i<=NF;i++) {
+     			if(itemCodes[$i]<1) {
+        			cnt++
+            		itemCodes[$i]=cnt
+        		}
+    		}
+        }
+	END {
+		    for(item in itemCodes) 
+		    	 print "[\"" item "\"]=" "\"" itemCodes[item]  "\""
+		}' $infile) )"
 
-#             awk 'BEGIN{FS=","
-#             cnt=0
-#         }
-#         { for(i=1;i<=NF;i++) {
-#             if (itemCodes[$i]<1)
-#                 {
-#                     cnt++
-#                     itemCodes[$i]=cnt
-#                 }
-#                 printf("%s",itemCodes[$i]);
-#                 if(i<NF)
-#                     printf(",")
-#                 else
-#                     printf("\n") 
-#                 }
+eval "itemCodesReverse=($(awk 'BEGIN{FS="," 
+cnt=0}
+ 		{
+			for(i=1;i<=NF;i++) {
+     			if(itemCodes[$i]<1) {
+        			cnt++
+            		itemCodes[$i]=cnt
+        		}
+    		}
+        }
+	END {
+		    for(item in itemCodes) 
+		    	 print "[\"" itemCodes[item] "\"]=" "\"" item  "\""
+		}' $infile) )"
 
-#             }
-#         END {}' $1>converted.csv
+OIFS=IFS
+IFS=","
 
-        outfile=`awk 'BEGIN{FS=","
-        cnt=0
-    }
-    {
-        confs[$1]=$2
+while read line
+do
+	record=($line)
+	len=${#record[@]}
+	for((i=0;i<$len-1;i++))
+	do
+		printf '%s,' ${itemCodes[${record[$i]}]}
+	done
+	printf '%s\n' ${itemCodes[${record[$i]}]}
+done < $infile > converted.csv
 
-    }
-END { print confs["output"]}' "config.csv"`
+IFS=OIFS
 
-dict+=(["1"]="cat" ["2"]="dog")
+./apriori
 
-echo $dict
-# awk -v dictt="$dict" 'BEGIN{FS=","
-# cnt=0
-#                 }
-#                 {
-#                     if($1=="#")
-#                         print $2
-#                     else {
-#                         for(i=1;i<=NF;i++) {
-#                             if($i=="=>")
-#                                 printf("=>");
-#                             else
-#                                 printf("%s",dictt[$i]);
-#                             if(i<NF)
-#                                 printf(",")
-#                             else
-#                                 printf("\n") 
-#                             }
+OIFS=IFS
+IFS=","
 
-#                         }
+while read line
+do
+	record=($line)
+	len=${#record[@]}
+	for((i=0;i<$len-1;i++))
+	do
+		if [ "${record[$i]}" != "=>" ] && [ "${record[0]}" != "#" ]
+		then
+			printf '%s,' ${itemCodesReverse[${record[$i]}]}
+		elif [ "${record[0]}" != "#" ]
+		then
+			printf "=>,"
+		else
+			printf '%s\n' "${record[1]}"
+		fi
+	done
+	if [ "${record[0]}" != "#" ]
+	then
+		printf '%s\n' ${itemCodesReverse[${record[$i]}]}
+	fi
+done < tempOutput.csv > $outfile
 
-#                     }
-#                 END { print confs["output"]}' "temp_output.csv" > out222
+IFS=OIFS
 
-
+rm -rf converted.csv
+rm -rf tempOutput.csv
+rm -rf tempRuleOutput.csv

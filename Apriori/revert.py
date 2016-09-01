@@ -24,10 +24,7 @@ def parse_input(inp_file):
 					i += 1
 				record[j] = code[record[j]]
 			out_writer.writerow(record)
-	with open("itemCodes.csv", 'wb') as fcodes:
-		out_writer = writer(fcodes)
-		for key,val in code.items():
-			out_writer.writerow([key,val]);
+	
 
 if __name__ == "__main__":
 	confs = parse_config()

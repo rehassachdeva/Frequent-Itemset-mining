@@ -1,4 +1,4 @@
-input,/home/rehas/dwdmassi1_apriori/OpenID transaction in progress.csv
+input,/home/rehas/dwdmassi1_apriori/nyn_test2.csv
 output,/home/rehas/dwdmassi1_apriori/out1.csv
 support,0.001
 confidence,0.2

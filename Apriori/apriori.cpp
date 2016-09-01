@@ -14,6 +14,7 @@ class trie {
         vector<itemRange> maxPathLen;
         vector<itemRange> sortedItemsByCount;
         vector<itemRange> posInSortedItems;
+        maxNodes numRules;
 
         trie() {
             counts.push_back(0);
@@ -21,6 +22,7 @@ class trie {
             labels.resize(1);
             endNodes.resize(1);
             parent.push_back(0);
+            numRules=0;
         }
 
         void genCandidatesUtil(maxNodes curNode,itemRange level,itemRange curLevel,
@@ -249,10 +251,11 @@ class trie {
 
         void genOutputUtil(ofstream& outFile,maxNodes curNode,itemRange freqSize,itemRange curSize,set<itemRange>& freqSet) {
             if(curSize==freqSize) {
-                for(set<itemRange>::iterator it=freqSet.begin();it!=freqSet.end();it++) {
-                    outFile<<sortedItemsByCount[*it]-1<<' ';
+            	set<itemRange>::iterator it;
+                for(it=freqSet.begin();it!=--(freqSet.end());it++) {
+                    outFile<<sortedItemsByCount[*it]-1<<',';
                 }
-                outFile<<'('<<counts[curNode]<<')'<<endl;
+                outFile<<sortedItemsByCount[*it]-1<<endl;
             }
             else {
                 vector<itemRange>::iterator itNode=endNodes[curNode].begin();
@@ -268,10 +271,8 @@ class trie {
         }
 
         void genOutput(ofstream& outFile) {
-            outFile << "Frequent 0-itemsets:\nitemset (occurrence)\n";
-            outFile << "{} ("<< counts[0] << ')' << endl;
+        	outFile<<"#,"<<getTotalNodes()-1<<endl;
             for(itemRange freqSize=1;freqSize<maxPathLen[0]+1;freqSize++) {
-                outFile << "Frequent " << freqSize << "-itemsets:\nitemset (occurrence)\n";
                 set<itemRange> freqSet;
                 genOutputUtil( outFile,0,freqSize,0,freqSet );
             }
@@ -286,15 +287,14 @@ class trie {
                     rhs.erase(item);
                     lhs.insert(item);
                     if(unionCount>counts[isPresent(lhs)]*minconf) {
-                        outFile<<endl;
+                        numRules++;
                         for(itl=lhs.begin();itl!=--(lhs.end());itl++)
-                            outFile<<sortedItemsByCount[*itl]-1<<' ';
+                            outFile<<sortedItemsByCount[*itl]-1<<',';
                         outFile<<sortedItemsByCount[*itl]-1;
-                        outFile<< " ==> ";
+                        outFile<<",=>,";
                         for(itl=rhs.begin();itl!=--(rhs.end());itl++)
-                            outFile<<sortedItemsByCount[*itl]-1<<' ';
-                        outFile<<sortedItemsByCount[*itl]-1;
-                        outFile<< " ("<<((double) unionCount) / counts[isPresent(lhs)] << ", " << unionCount << ')';
+                            outFile<<sortedItemsByCount[*itl]-1<<',';
+                        outFile<<sortedItemsByCount[*itl]-1<<endl;
                     }
                     else if(rhs.size()>1) mineRuleFind(outFile,minconf,lhs,rhs,unionCount);
                     itr=(rhs.insert(item)).first;
@@ -308,7 +308,7 @@ class trie {
                 set<itemRange> lhs;
                 mineRuleFind(outFile,minconf,lhs,rhs,counts[curNode]);
             }
-            vector<maxNodes>::iterator itNode;
+            vector<maxNodes>::iterator itNode=endNodes[curNode].begin();
             vector<itemRange>::iterator it;
             for(it=labels[curNode].begin();it!=labels[curNode].end();it++,itNode++) {
                 rhs.insert(*it);
@@ -318,9 +318,14 @@ class trie {
         }
 
         void mineRules(ofstream& outFile,double minconf) {
-        	cout<<"hey";
             set<itemRange> rhs;
-            mineRulesUtil(outFile,minconf,0,rhs);
+            ofstream tempRuleOutputPtr("./tempRuleOutput.csv");
+            mineRulesUtil(tempRuleOutputPtr,minconf,0,rhs);
+            outFile<<"#,"<<numRules<<endl;
+            tempRuleOutputPtr.close();
+            ifstream tempRuleOutputPtr2("./tempRuleOutput.csv");
+            outFile<<tempRuleOutputPtr2.rdbuf();
+            tempRuleOutputPtr2.close();
         }
 
         unsigned long int getTotalNodes() {
@@ -426,21 +431,17 @@ class apriori {
             Trie->deleteInfrequent(minCount);
             unsigned long int trieSize=Trie->getTotalNodes();
             Trie->genCandidates(candidateSize);
-            int i=0;
             while(trieSize<Trie->getTotalNodes()) {
-            	i++;
                 candidateSize++;
                 fclose(inpFile);
                 inpFile=fopen(inpFileName,"r");
 
                 calcSupport(inpFile,candidateSize);
-                cout<<i<<endl;
 
                 Trie->deleteInfrequent(minCount);
                 trieSize=Trie->getTotalNodes();
                 Trie->genCandidates(candidateSize);
             }
-
             fclose(inpFile);
             Trie->genOutput(outFile);
             if(flag==1)
@@ -473,7 +474,10 @@ int main()
             minconf=stod(val);
     }
 
-    ofstream outFilePtr("temp_output.csv");
+    configFile.close();
+
+    inpFile="./converted.csv";
+    ofstream outFilePtr("./tempOutput.csv");
 
     apriori aprioriInstance;
     char* inpFileName=new char[inpFile.size()+1];
